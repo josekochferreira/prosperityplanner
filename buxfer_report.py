@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 import buxfer
 import cashflow
+import supabase_store
 
 load_dotenv()
 
@@ -70,11 +71,18 @@ def main() -> None:
                    help="YYYY-MM-DD (default: 12 months ago)")
     p.add_argument("--end", default=date.today().isoformat(), help="YYYY-MM-DD (default: today)")
     p.add_argument("--include-pending", action="store_true")
+    p.add_argument("--from-db", action="store_true",
+                   help="read transactions from Supabase instead of calling Buxfer")
     p.add_argument("--html", metavar="FILE", help="also write an HTML view to FILE")
     args = p.parse_args()
 
-    client = buxfer.from_env()
-    txns = client.list_transactions(args.start, args.end)
+    if args.from_db:
+        rows = supabase_store.from_env().select(
+            "transactions", select="raw", source="eq.buxfer", order="date.asc",
+            **{"and": f"(date.gte.{args.start},date.lte.{args.end})"})
+        txns = [r["raw"] for r in rows]
+    else:
+        txns = buxfer.from_env().list_transactions(args.start, args.end)
     summary = cashflow.summarise(txns, include_pending=args.include_pending)
     print(f"{len(txns)} transactions, {args.start} to {args.end}\n")
     print_text(summary)
