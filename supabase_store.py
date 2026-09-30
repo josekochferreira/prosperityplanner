@@ -47,10 +47,10 @@ class SupabaseStore:
             if len(batch) < 1000:
                 return out
 
-    def start_run(self, agent: str, params: dict) -> str:
+    def start_run(self, agent: str, owner_id: str, params: dict) -> str:
         resp = self._check(self._session.post(
             f"{self._base}/agent_runs",
-            json={"agent": agent, "params": params},
+            json={"agent": agent, "owner_id": owner_id, "params": params},
             headers={"Prefer": "return=representation"},
             timeout=30,
         ))
@@ -62,6 +62,11 @@ class SupabaseStore:
             f"{self._base}/agent_runs", params={"id": f"eq.{run_id}"},
             json=fields, timeout=30,
         ))
+
+
+def owner_id_from_env() -> str:
+    """The Supabase Auth user id (uuid) that all ingested rows belong to."""
+    return os.environ["OWNER_ID"]
 
 
 def from_env() -> SupabaseStore:

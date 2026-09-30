@@ -79,6 +79,7 @@ def main() -> None:
     if args.from_db:
         rows = supabase_store.from_env().select(
             "transactions", select="raw", source="eq.buxfer", order="date.asc",
+            owner_id=f"eq.{supabase_store.owner_id_from_env()}",
             **{"and": f"(date.gte.{args.start},date.lte.{args.end})"})
         txns = [r["raw"] for r in rows]
     else:

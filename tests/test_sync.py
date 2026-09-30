@@ -6,11 +6,14 @@ import pytest  # noqa: E402
 import sync_buxfer  # noqa: E402
 
 
+OWNER = "11111111-1111-1111-1111-111111111111"
+
+
 class FakeStore:
     def __init__(self):
         self.tables, self.finished = {}, None
 
-    def start_run(self, agent, params):
+    def start_run(self, agent, owner_id, params):
         return "run1"
 
     def upsert(self, table, rows, conflict):
@@ -37,15 +40,16 @@ class FakeBuxfer:
 
 def test_sync_upserts_and_logs_success():
     store = FakeStore()
-    out = sync_buxfer.sync(FakeBuxfer(), store, "2026-09-01", "2026-09-30")
+    out = sync_buxfer.sync(FakeBuxfer(), store, OWNER, "2026-09-01", "2026-09-30")
     assert out == {"accounts": 1, "transactions": 1}
     row = store.tables["transactions"][0]
     assert (row["source_id"], row["type"], row["amount"], row["tags"]) == ("7", "expense", "-12.3", ["Food"])
+    assert row["owner_id"] == OWNER and store.tables["accounts"][0]["owner_id"] == OWNER
     assert store.finished["status"] == "succeeded" and store.finished["rows_upserted"] == 1
 
 
 def test_sync_logs_failure_and_reraises():
     store = FakeStore()
     with pytest.raises(RuntimeError):
-        sync_buxfer.sync(FakeBuxfer(fail=True), store, "a", "b")
+        sync_buxfer.sync(FakeBuxfer(fail=True), store, OWNER, "a", "b")
     assert store.finished["status"] == "failed" and "boom" in store.finished["error"]

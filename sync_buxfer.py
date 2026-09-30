@@ -16,8 +16,9 @@ def _tags(txn: dict) -> list[str]:
     return [t for t in (txn.get("tagNames") or []) if t]
 
 
-def transaction_row(t: dict) -> dict:
+def transaction_row(t: dict, owner_id: str) -> dict:
     return {
+        "owner_id": owner_id,
         "source": "buxfer",
         "source_id": str(t["id"]),
         "account_source_id": str(t["accountId"]) if t.get("accountId") is not None else None,
@@ -32,8 +33,9 @@ def transaction_row(t: dict) -> dict:
     }
 
 
-def account_row(a: dict) -> dict:
+def account_row(a: dict, owner_id: str) -> dict:
     return {
+        "owner_id": owner_id,
         "source": "buxfer",
         "source_id": str(a["id"]),
         "name": a.get("name", ""),
@@ -44,13 +46,15 @@ def account_row(a: dict) -> dict:
     }
 
 
-def sync(client, store, start: str, end: str) -> dict:
-    run_id = store.start_run(AGENT, {"start": start, "end": end})
+def sync(client, store, owner_id: str, start: str, end: str) -> dict:
+    run_id = store.start_run(AGENT, owner_id, {"start": start, "end": end})
     try:
         accounts = client.list_accounts()
         txns = client.list_transactions(start, end)
-        store.upsert("accounts", [account_row(a) for a in accounts], "source,source_id")
-        n = store.upsert("transactions", [transaction_row(t) for t in txns], "source,source_id")
+        store.upsert("accounts", [account_row(a, owner_id) for a in accounts],
+                     "owner_id,source,source_id")
+        n = store.upsert("transactions", [transaction_row(t, owner_id) for t in txns],
+                        "owner_id,source,source_id")
     except Exception as exc:
         store.finish_run(run_id, status="failed", error=str(exc)[:1000])
         raise
@@ -64,7 +68,8 @@ def main() -> None:
                    help="YYYY-MM-DD (default: 90 days ago; use an early date for first backfill)")
     p.add_argument("--end", default=date.today().isoformat())
     args = p.parse_args()
-    result = sync(buxfer.from_env(), supabase_store.from_env(), args.start, args.end)
+    result = sync(buxfer.from_env(), supabase_store.from_env(),
+                  supabase_store.owner_id_from_env(), args.start, args.end)
     print(f"Synced {result['accounts']} accounts, {result['transactions']} transactions")
 
 
