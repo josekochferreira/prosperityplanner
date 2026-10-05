@@ -31,6 +31,10 @@ class FakeBuxfer:
     def list_accounts(self):
         return [{"id": 1, "name": "Checking", "balance": 10.5}]
 
+    def list_tags(self):
+        return [{"id": 3, "name": "Food", "parentId": None},
+                {"id": 4, "name": "Groceries", "parentId": 3}]
+
     def list_transactions(self, start, end):
         if self.fail:
             raise RuntimeError("boom")
@@ -45,6 +49,10 @@ def test_sync_upserts_and_logs_success():
     row = store.tables["transactions"][0]
     assert (row["source_id"], row["type"], row["amount"], row["tags"]) == ("7", "expense", "-12.3", ["Food"])
     assert row["owner_id"] == OWNER and store.tables["accounts"][0]["owner_id"] == OWNER
+    tags = store.tables["tags"]
+    assert [(t["source_id"], t["name"], t["parent_source_id"]) for t in tags] == [
+        ("3", "Food", None), ("4", "Groceries", "3")]
+    assert all(t["owner_id"] == OWNER for t in tags)
     assert store.finished["status"] == "succeeded" and store.finished["rows_upserted"] == 1
 
 
@@ -53,3 +61,8 @@ def test_sync_logs_failure_and_reraises():
     with pytest.raises(RuntimeError):
         sync_buxfer.sync(FakeBuxfer(fail=True), store, OWNER, "a", "b")
     assert store.finished["status"] == "failed" and "boom" in store.finished["error"]
+
+
+@pytest.mark.parametrize("parent", [None, "", 0, "0"])
+def test_tag_without_parent_is_top_level(parent):
+    assert sync_buxfer.tag_row({"id": 9, "name": "X", "parentId": parent}, OWNER)["parent_source_id"] is None

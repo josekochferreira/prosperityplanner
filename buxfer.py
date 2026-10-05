@@ -43,6 +43,10 @@ class BuxferClient:
     def list_accounts(self) -> list[dict]:
         return self._get("accounts").get("accounts", [])
 
+    def list_tags(self) -> list[dict]:
+        """All tags as {id, name, parentId}; parentId links a subcategory to its parent."""
+        return self._get("tags").get("tags", [])
+
     def list_transactions(
         self, start_date: str | None = None, end_date: str | None = None
     ) -> list[dict]:

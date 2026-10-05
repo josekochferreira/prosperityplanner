@@ -40,8 +40,9 @@ export default async function Dashboard() {
         <form action={signOut}><button type="submit" className="link">Sign out</button></form>
       </header>
       <p className="note">
-        Expenses only (transfers and investments excluded), by first tag. Figures use completed months,
-        so the current month is left out until it ends.
+        Expenses only (transfers and investments excluded), grouped by top-level category and sorted by
+        the last 12 months, largest first. Figures use completed months, so the current month is left
+        out until it ends.
       </p>
       <CostSection
         title="Total costs"

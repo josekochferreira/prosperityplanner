@@ -45,6 +45,12 @@ export function CostSection({
                 </tr>
               </thead>
               <tbody>
+                <tr className="total">
+                  <th scope="row">Total</th>
+                  {panel.idx.map((i) => (
+                    <td key={table.periods[i].key} className="num">{show(table.totals[i])}</td>
+                  ))}
+                </tr>
                 {table.rows.map((row) => (
                   <tr key={row.category}>
                     <th scope="row">{row.category}</th>
@@ -54,14 +60,6 @@ export function CostSection({
                   </tr>
                 ))}
               </tbody>
-              <tfoot>
-                <tr>
-                  <th scope="row">Total</th>
-                  {panel.idx.map((i) => (
-                    <td key={table.periods[i].key} className="num">{show(table.totals[i])}</td>
-                  ))}
-                </tr>
-              </tfoot>
             </table>
           </div>
         ))}

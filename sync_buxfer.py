@@ -46,12 +46,27 @@ def account_row(a: dict, owner_id: str) -> dict:
     }
 
 
+def tag_row(t: dict, owner_id: str) -> dict:
+    parent = t.get("parentId")
+    return {
+        "owner_id": owner_id,
+        "source": "buxfer",
+        "source_id": str(t["id"]),
+        "name": t.get("name", ""),
+        "parent_source_id": str(parent) if parent not in (None, "", 0, "0") else None,
+        "raw": t,
+    }
+
+
 def sync(client, store, owner_id: str, start: str, end: str) -> dict:
     run_id = store.start_run(AGENT, owner_id, {"start": start, "end": end})
     try:
         accounts = client.list_accounts()
+        tags = client.list_tags()
         txns = client.list_transactions(start, end)
         store.upsert("accounts", [account_row(a, owner_id) for a in accounts],
+                     "owner_id,source,source_id")
+        store.upsert("tags", [tag_row(t, owner_id) for t in tags],
                      "owner_id,source,source_id")
         n = store.upsert("transactions", [transaction_row(t, owner_id) for t in txns],
                         "owner_id,source,source_id")

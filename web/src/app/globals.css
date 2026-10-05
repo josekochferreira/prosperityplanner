@@ -20,7 +20,7 @@ th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: le
 thead th { font-weight: 600; vertical-align: bottom; }
 thead small { display: block; color: var(--muted); font-weight: 400; font-size: .75rem; }
 .num { text-align: right; }
-tfoot th, tfoot td { font-weight: 700; border-top: 2px solid var(--fg); border-bottom: 0; }
+tr.total th, tr.total td { font-weight: 700; border-bottom: 2px solid var(--fg); }
 button { font: inherit; cursor: pointer; }
 button.link { background: none; border: 0; color: var(--accent); padding: 0; }
 .login { max-width: 340px; margin: 12vh auto; padding: 0 16px; }
