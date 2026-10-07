@@ -1,5 +1,7 @@
 """Sharesight API client using client_credentials OAuth2 flow."""
 
+from __future__ import annotations
+
 import os
 import requests
 
@@ -39,11 +41,23 @@ class SharesightClient:
         data = self._get(f"/portfolios/{portfolio_id}/holdings")
         return data.get("holdings", [])
 
-    def get_performance(self, portfolio_id: int) -> dict:
-        return self._get(f"/portfolios/{portfolio_id}/performance")
+    def get_performance(self, portfolio_id: int, start_date: str | None = None,
+                        end_date: str | None = None) -> dict:
+        params = {k: v for k, v in
+                  {"start_date": start_date, "end_date": end_date}.items() if v}
+        return self._get(f"/portfolios/{portfolio_id}/performance", **params)
 
 
 def from_env() -> SharesightClient:
     client_id = os.environ["SHARESIGHT_CLIENT_ID"]
     client_secret = os.environ["SHARESIGHT_CLIENT_SECRET"]
     return SharesightClient(client_id, client_secret)
+
+
+if __name__ == "__main__":
+    # Connection check: authenticates and lists portfolios. Never prints credentials.
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    for p in from_env().list_portfolios():
+        print(p.get("id"), p.get("name"), p.get("currency_code") or p.get("currency"))
