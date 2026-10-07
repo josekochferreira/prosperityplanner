@@ -1,0 +1,35 @@
+name: Sharesight sync
+
+on:
+  schedule:
+    - cron: "22 5 * * *" # daily 05:22 UTC, 5 min after the Buxfer sync
+  workflow_dispatch:
+    inputs:
+      portfolio:
+        description: "Portfolio id (blank = all portfolios)"
+        required: false
+
+concurrency:
+  group: sharesight-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Sync Sharesight -> Supabase
+        env:
+          SHARESIGHT_CLIENT_ID: ${{ secrets.SHARESIGHT_CLIENT_ID }}
+          SHARESIGHT_CLIENT_SECRET: ${{ secrets.SHARESIGHT_CLIENT_SECRET }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OWNER_ID: ${{ secrets.OWNER_ID }}
+          PORTFOLIO: ${{ inputs.portfolio }}
+        run: python sync_sharesight.py ${PORTFOLIO:+--portfolio "$PORTFOLIO"}
