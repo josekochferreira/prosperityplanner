@@ -20,6 +20,19 @@ export async function fetchCosts(since: string): Promise<CostRow[]> {
   }
 }
 
+/** When the most recent successful sync finished; null before the first one. */
+export async function fetchLastSync(): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("agent_runs")
+    .select("finished_at")
+    .eq("status", "succeeded")
+    .order("finished_at", { ascending: false })
+    .limit(1);
+  if (error) throw new Error(error.message);
+  return (data?.[0]?.finished_at as string | undefined) ?? null;
+}
+
 export type PortfolioSnapshot = {
   date: string;
   currency: string | null;
