@@ -2,7 +2,7 @@ name: Sharesight sync
 
 on:
   schedule:
-    - cron: "22 5 * * *" # daily 05:22 UTC, 5 min after the Buxfer sync
+    - cron: "5 0 * * 0" # Sundays 00:05 UTC, 5 min after the Buxfer sync
   workflow_dispatch:
     inputs:
       portfolio:
