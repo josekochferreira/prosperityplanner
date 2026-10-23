@@ -2,7 +2,7 @@ name: Buxfer sync
 
 on:
   schedule:
-    - cron: "0 0 * * 0" # Sundays 00:00 UTC
+    - cron: "0 7 * * *" # daily 07:00 UTC
   workflow_dispatch:
     inputs:
       start:
